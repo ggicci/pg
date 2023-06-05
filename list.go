@@ -43,7 +43,7 @@ func List[T any](ctx context.Context, vs T, query sq.SelectBuilder, opts ...List
 		return vs, nil, fmt.Errorf("count records: %w", err)
 	}
 
-	pagination.SetTotalRecords(total)
+	pagination.SetCountRecords(total)
 	if pagination.CountRecords == 0 || pagination.Page > pagination.CountPages {
 		return vs, pagination, nil // skip running query
 	}

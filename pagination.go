@@ -18,8 +18,8 @@ import (
 
 // OffsetPagination holds paging info in offset pagination method.
 type OffsetPagination struct {
-	Page         int64 `in:"query=page;default=1" json:"page"`
-	PerPage      int64 `in:"query=per_page;default=20" json:"per_page"`
+	Page         int64 `json:"page" in:"query=page" `
+	PerPage      int64 `json:"per_page" in:"query=per_page"`
 	CountPages   int64 `json:"count_pages"`
 	CountRecords int64 `json:"count_records"`
 
@@ -28,9 +28,18 @@ type OffsetPagination struct {
 
 // NewOffsetPagination creates a new `Pagination` with a default page size.
 func NewOffsetPagination(defaultPerPage int64) *OffsetPagination {
-	return &OffsetPagination{
+	p := &OffsetPagination{
 		defaultPerPage: defaultPerPage,
 	}
+	p.normalize()
+	return p
+}
+
+// SetDefaultPerPage sets the default page size.
+func (p *OffsetPagination) SetDefaultPerPage(defaultPerPage int64) int64 {
+	p.defaultPerPage = defaultPerPage
+	p.normalize()
+	return p.defaultPerPage
 }
 
 // Limit returns the page size.
@@ -57,15 +66,15 @@ func (p *OffsetPagination) PageSize() int64 {
 	return p.PerPage
 }
 
-// SetTotalRecords update the `Records` field.
-func (p *OffsetPagination) SetTotalRecords(total int64) {
+// SetCountRecords update the `Records` field.
+func (p *OffsetPagination) SetCountRecords(total int64) {
 	p.CountRecords = total
 	p.normalize()
 }
 
 func (p *OffsetPagination) normalize() {
 	if p.defaultPerPage <= 0 {
-		p.defaultPerPage = 10
+		p.defaultPerPage = 20
 	}
 
 	if p.Page <= 0 {
