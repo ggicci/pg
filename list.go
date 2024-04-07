@@ -17,15 +17,15 @@ import (
 // Example:
 //
 //	var users []*User
-//	err := pg.List(ctx, users, pg.SQL.Select("*").From("users"))
-func List[T any](ctx context.Context, vs T, query sq.SelectBuilder, opts ...ListOption) (T, *OffsetPagination, error) {
+//	pagination, err := pg.List(ctx, users, pg.SQL.Select("*").From("users"))
+func List[T any](ctx context.Context, vs T, query sq.SelectBuilder, opts ...ListOption) (*OffsetPagination, error) {
 	filteringOpts, pagingOpts, sortingOpts := CategorizedListOptions(opts...)
 
 	if len(pagingOpts) == 0 {
 		pagingOpts = []ListOption{WithOffsetPagination(NewOffsetPagination(20))}
 	}
 	if len(pagingOpts) > 1 {
-		return vs, nil, errors.New("only one pagination option is allowed")
+		return nil, errors.New("only one pagination option is allowed")
 	}
 	pagination := pagingOpts[0].(*withOffsetPaginationOption).page
 
@@ -35,17 +35,17 @@ func List[T any](ctx context.Context, vs T, query sq.SelectBuilder, opts ...List
 
 	sqlstr, args, err := toCountQuery(query).ToSql()
 	if err != nil {
-		return vs, nil, fmt.Errorf("assemble count query: %w", err)
+		return nil, fmt.Errorf("assemble count query: %w", err)
 	}
 
 	var total int64
 	if err := DB().QueryRow(ctx, sqlstr, args...).Scan(&total); err != nil {
-		return vs, nil, fmt.Errorf("count records: %w", err)
+		return nil, fmt.Errorf("count records: %w", err)
 	}
 
 	pagination.SetCountRecords(total)
 	if pagination.CountRecords == 0 || pagination.Page > pagination.CountPages {
-		return vs, pagination, nil // skip running query
+		return pagination, nil // skip running query
 	}
 
 	for _, opt := range sortingOpts {
@@ -57,11 +57,11 @@ func List[T any](ctx context.Context, vs T, query sq.SelectBuilder, opts ...List
 
 	sqlstr, args, err = query.ToSql()
 	if err != nil {
-		return vs, nil, fmt.Errorf("assemble query: %w", err)
+		return nil, fmt.Errorf("assemble query: %w", err)
 	}
 
 	err = pgxscan.Select(ctx, DB(), &vs, sqlstr, args...)
-	return vs, pagination, err
+	return pagination, err
 }
 
 func toCountQuery(query sq.SelectBuilder) sq.SelectBuilder {

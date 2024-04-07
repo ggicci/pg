@@ -6,7 +6,8 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-// Exec simplifies running a INSERT/UPDATE/DELETE query. It returns the number of rows affected.
+// Exec simplifies running a INSERT/UPDATE/DELETE query.
+// Returns the number of rows affected on success and execution error on failure.
 //
 // Example:
 //
