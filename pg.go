@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,10 +20,12 @@ var (
 
 // Init initializes the database connection pool, using the given connection string.
 // See `pgxpool.New` for more details about the format of the connection string.
-func Init(ctx context.Context, connString string) error {
-	var err error
+func Init(ctx context.Context, connString string) (err error) {
 	pool, err = pgxpool.New(ctx, connString)
-	return err
+	if err != nil {
+		return fmt.Errorf("pgxpool.New failed: %w", err)
+	}
+	return pool.Ping(context.Background())
 }
 
 // DB returns the database connection pool.
